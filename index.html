@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultimate Scalper — Polymarket Alpha</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #080808;
+    --white: #f5f0e8;
+    --gold: #c9a84c;
+    --gold-light: #e8c96e;
+    --green: #00ff87;
+    --red: #ff3b3b;
+    --grey: #1a1a1a;
+    --grey2: #2a2a2a;
+    --text-dim: #666;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 48px;
+    border-bottom: 1px solid rgba(201,168,76,0.15);
+    background: rgba(8,8,8,0.85);
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+    color: var(--gold);
+  }
+
+  .nav-right {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+  }
+
+  .nav-link {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .nav-link:hover { color: var(--gold); }
+
+  .nav-cta {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--black);
+    background: var(--gold);
+    padding: 10px 24px;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+
+  .nav-cta:hover { background: var(--gold-light); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 120px 48px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -200px; right: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.2s forwards;
+  }
+
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(72px, 10vw, 140px);
+    line-height: 0.92;
+    letter-spacing: 2px;
+    margin-bottom: 40px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.4s forwards;
+  }
+
+  .hero h1 span { color: var(--gold); }
+
+  .hero-sub {
+    font-size: 18px;
+    font-weight: 300;
+    color: var(--text-dim);
+    max-width: 520px;
+    line-height: 1.7;
+    margin-bottom: 60px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.6s forwards;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 60px;
+    margin-bottom: 60px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.8s forwards;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .stat-num.green { color: var(--green); }
+
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .hero-ctas {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    opacity: 0;
+    animation: fadeUp 0.8s 1.0s forwards;
+  }
+
+  .btn-primary {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--black);
+    background: var(--gold);
+    padding: 18px 40px;
+    text-decoration: none;
+    transition: all 0.2s;
+    border: 2px solid var(--gold);
+  }
+
+  .btn-primary:hover {
+    background: transparent;
+    color: var(--gold);
+  }
+
+  .btn-secondary {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--white);
+    padding: 18px 40px;
+    text-decoration: none;
+    border: 2px solid rgba(255,255,255,0.15);
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* ── TICKER ── */
+  .ticker {
+    background: var(--grey);
+    border-top: 1px solid rgba(201,168,76,0.2);
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+    padding: 14px 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .ticker-inner {
+    display: inline-flex;
+    gap: 80px;
+    animation: ticker 30s linear infinite;
+  }
+
+  .ticker-item {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .ticker-item .up { color: var(--green); }
+  .ticker-item .gold { color: var(--gold); }
+
+  /* ── LIVE FEED ── */
+  .live-section {
+    padding: 120px 48px;
+    border-bottom: 1px solid var(--grey2);
+  }
+
+  .section-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 24px;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(42px, 5vw, 72px);
+    line-height: 1;
+    margin-bottom: 60px;
+  }
+
+  .trades-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1px;
+    background: var(--grey2);
+    border: 1px solid var(--grey2);
+    margin-bottom: 60px;
+  }
+
+  .trade-card {
+    background: var(--black);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: background 0.2s;
+  }
+
+  .trade-card:hover { background: var(--grey); }
+
+  .trade-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .trade-coin {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+  }
+
+  .trade-result {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+  }
+
+  .trade-result.win {
+    color: var(--green);
+    background: rgba(0,255,135,0.08);
+  }
+
+  .trade-result.loss {
+    color: var(--red);
+    background: rgba(255,59,59,0.08);
+  }
+
+  .trade-market {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--white);
+  }
+
+  .trade-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .trade-pnl {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+  }
+
+  .trade-pnl.pos { color: var(--green); }
+  .trade-pnl.neg { color: var(--red); }
+
+  .trade-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  /* ── BIG STATS ── */
+  .stats-section {
+    padding: 120px 48px;
+    background: var(--grey);
+    border-bottom: 1px solid var(--grey2);
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--grey2);
+    border: 1px solid var(--grey2);
+  }
+
+  .big-stat {
+    background: var(--grey);
+    padding: 48px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .big-stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 64px;
+    line-height: 1;
+    color: var(--gold);
+  }
+
+  .big-stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .big-stat-sub {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* ── HOW IT WORKS ── */
+  .how-section {
+    padding: 120px 48px;
+    border-bottom: 1px solid var(--grey2);
+  }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 60px;
+    margin-top: 60px;
+  }
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .step-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 80px;
+    color: var(--grey2);
+    line-height: 1;
+  }
+
+  .step-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 1px;
+  }
+
+  .step-desc {
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--text-dim);
+    line-height: 1.8;
+  }
+
+  .step-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    padding: 6px 14px;
+    border: 1px solid rgba(201,168,76,0.3);
+    width: fit-content;
+  }
+
+  /* ── PROOF ── */
+  .proof-section {
+    padding: 120px 48px;
+    background: var(--grey);
+    border-bottom: 1px solid var(--grey2);
+  }
+
+  .proof-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    margin-top: 60px;
+    align-items: center;
+  }
+
+  .proof-terminal {
+    background: var(--black);
+    border: 1px solid var(--grey2);
+    padding: 32px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    line-height: 2;
+  }
+
+  .terminal-header {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--grey2);
+  }
+
+  .dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+  }
+
+  .dot.r { background: #ff5f57; }
+  .dot.y { background: #febc2e; }
+  .dot.g { background: #28c840; }
+
+  .t-line { color: var(--text-dim); }
+  .t-win { color: var(--green); }
+  .t-loss { color: var(--red); }
+  .t-gold { color: var(--gold); }
+  .t-white { color: var(--white); }
+
+  .proof-points {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .proof-point {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  .proof-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .proof-text h4 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+
+  .proof-text p {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+
+  /* ── PRICING ── */
+  .pricing-section {
+    padding: 120px 48px;
+    border-bottom: 1px solid var(--grey2);
+  }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr 1fr;
+    gap: 1px;
+    background: var(--grey2);
+    border: 1px solid var(--grey2);
+    margin-top: 60px;
+  }
+
+  .price-card {
+    background: var(--black);
+    padding: 48px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    position: relative;
+  }
+
+  .price-card.featured {
+    background: var(--grey);
+    border-top: 3px solid var(--gold);
+  }
+
+  .featured-tag {
+    position: absolute;
+    top: -12px; left: 40px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: var(--gold);
+    color: var(--black);
+    padding: 4px 12px;
+  }
+
+  .price-tier {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .price-amount {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 56px;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .price-amount span {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 18px;
+    font-weight: 300;
+    color: var(--text-dim);
+  }
+
+  .price-desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--grey2);
+  }
+
+  .price-features {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    list-style: none;
+    flex: 1;
+  }
+
+  .price-features li {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .price-features li::before {
+    content: '→';
+    color: var(--gold);
+  }
+
+  .price-features li.included {
+    color: var(--white);
+  }
+
+  .price-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    border: 2px solid var(--gold);
+    color: var(--gold);
+    background: transparent;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: block;
+  }
+
+  .price-btn:hover, .price-btn.active {
+    background: var(--gold);
+    color: var(--black);
+  }
+
+  /* ── APPLY ── */
+  .apply-section {
+    padding: 120px 48px;
+    background: var(--grey);
+    border-bottom: 1px solid var(--grey2);
+  }
+
+  .apply-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    margin-top: 60px;
+    align-items: start;
+  }
+
+  .apply-left p {
+    font-size: 16px;
+    color: var(--text-dim);
+    line-height: 1.8;
+    margin-bottom: 32px;
+  }
+
+  .apply-left .warning {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--red);
+    padding: 16px;
+    border: 1px solid rgba(255,59,59,0.2);
+    line-height: 1.8;
+  }
+
+  .apply-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .form-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .form-input {
+    background: var(--black);
+    border: 1px solid var(--grey2);
+    color: var(--white);
+    padding: 14px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  .form-input:focus { border-color: var(--gold); }
+
+  .form-input::placeholder { color: var(--text-dim); }
+
+  select.form-input option { background: var(--black); }
+
+  .form-submit {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--black);
+    background: var(--gold);
+    border: none;
+    padding: 18px;
+    cursor: pointer;
+    transition: background 0.2s;
+    width: 100%;
+  }
+
+  .form-submit:hover { background: var(--gold-light); }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 60px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--grey2);
+  }
+
+  .footer-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    color: var(--gold);
+  }
+
+  .footer-disclaimer {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    max-width: 500px;
+    text-align: right;
+    line-height: 1.8;
+  }
+
+  /* ── SUCCESS MESSAGE ── */
+  .success-msg {
+    display: none;
+    background: rgba(0,255,135,0.08);
+    border: 1px solid rgba(0,255,135,0.2);
+    padding: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--green);
+    letter-spacing: 1px;
+    line-height: 1.8;
+    text-align: center;
+  }
+
+  /* ── LIVE INDICATOR ── */
+  .live-dot {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--green);
+  }
+
+  .live-dot::before {
+    content: '';
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  /* ── COUNTDOWN ── */
+  .countdown-bar {
+    background: var(--black);
+    border: 1px solid rgba(201,168,76,0.25);
+    padding: 20px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 73px;
+    z-index: 90;
+    backdrop-filter: blur(12px);
+  }
+
+  .countdown-left {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .countdown-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .spots-remaining {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .spots-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    color: var(--gold);
+    line-height: 1;
+    transition: all 0.4s;
+  }
+
+  .spots-total {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .spots-bar-wrap {
+    flex: 1;
+    max-width: 300px;
+    height: 4px;
+    background: var(--grey2);
+    margin: 0 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .spots-bar-fill {
+    height: 100%;
+    background: var(--gold);
+    transition: width 1s ease;
+  }
+
+  .countdown-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .early-bird-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--green);
+    padding: 6px 14px;
+    border: 1px solid rgba(0,255,135,0.25);
+    animation: pulse-border 2s infinite;
+  }
+
+  @keyframes pulse-border {
+    0%, 100% { border-color: rgba(0,255,135,0.25); }
+    50%       { border-color: rgba(0,255,135,0.7); }
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  @keyframes countUp {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    nav { padding: 20px 24px; }
+    .nav-right { gap: 20px; }
+    .nav-link { display: none; }
+    .hero { padding: 100px 24px 60px; }
+    .hero-stats { gap: 32px; flex-wrap: wrap; }
+    .live-section, .stats-section, .how-section,
+    .proof-section, .pricing-section, .apply-section { padding: 80px 24px; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .steps { grid-template-columns: 1fr; }
+    .proof-grid { grid-template-columns: 1fr; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .apply-grid { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 20px; text-align: center; }
+    .footer-disclaimer { text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">ULTIMATE SCALPER</div>
+  <div class="nav-right">
+    <a href="#performance" class="nav-link">Performance</a>
+    <a href="#how" class="nav-link">How It Works</a>
+    <a href="#pricing" class="nav-link">Pricing</a>
+    <a href="#apply" class="nav-cta">Apply Now</a>
+  </div>
+</nav>
+
+<!-- SPOT COUNTDOWN BAR -->
+<div class="countdown-bar" id="countdown-bar">
+  <div class="countdown-left">
+    <div>
+      <div class="countdown-label">Spots Remaining</div>
+      <div class="spots-remaining">
+        <div class="spots-num" id="live-spots">71</div>
+        <div class="spots-total">/ 71 total</div>
+      </div>
+    </div>
+    <div class="spots-bar-wrap">
+      <div class="spots-bar-fill" id="spots-bar" style="width:100%"></div>
+    </div>
+    <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--text-dim);">
+      <span id="spots-pct">100%</span> available
+    </div>
+  </div>
+  <div class="countdown-right">
+    <div class="early-bird-badge">⚡ 21 EARLY ADOPTER @ $985</div>
+    <a href="#apply" class="nav-cta" style="font-size:10px;">Claim Spot →</a>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag">⚡ Polymarket Algorithmic Trading — Invitation Only</div>
+  <h1>THE EDGE<br>YOU NEED.<br><span>PROVEN.</span></h1>
+  <p class="hero-sub">
+    Autonomous Polymarket scalper running 24/7. 
+    90%+ win rate. $500+ daily. Your capital. Our algorithm.
+  </p>
+  <div style="display:inline-flex; align-items:center; gap:16px; background:rgba(201,168,76,0.08); border:1px solid rgba(201,168,76,0.3); padding:16px 28px; margin-bottom:40px;">
+    <span style="color:var(--gold); font-size:22px;">⚡</span>
+    <span style="font-family:'DM Mono',monospace; font-size:13px; letter-spacing:1px; color:var(--white); line-height:1.7;">
+      At $500/day average — this bot <span style="color:var(--gold);">breaks even in 2 days.</span><br>
+      Everything after is pure profit. <span style="color:var(--gold);">Forever.</span>
+    </span>
+  </div>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num green" id="wr-stat">90%</div>
+      <div class="stat-label">Win Rate</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="trades-stat">500+</div>
+      <div class="stat-label">Trades Executed</div>
+    </div>
+
+
+  </div>
+  <div class="hero-ctas">
+    <a href="#apply" class="btn-primary">Apply for Access</a>
+    <a href="#performance" class="btn-secondary">View Performance →</a>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-inner" id="ticker">
+    <span class="ticker-item">BTC 5M <span class="up">89% WR</span></span>
+    <span class="ticker-item">ETH 15M <span class="up">96% WR</span></span>
+    <span class="ticker-item">XRP <span class="up">100% WR</span></span>
+    <span class="ticker-item">SOL <span class="up">100% WR</span></span>
+    <span class="ticker-item">LIMITED <span class="gold">71 SPOTS TOTAL</span></span>
+    <span class="ticker-item">TOTAL P&L <span class="up">+$500/day avg</span></span>
+    <span class="ticker-item">DRAWDOWN <span class="up">CONTROLLED</span></span>
+    <span class="ticker-item">LIVE SINCE <span class="gold">FEB 2026</span></span>
+    <span class="ticker-item">BTC 5M <span class="up">89% WR</span></span>
+    <span class="ticker-item">ETH 15M <span class="up">96% WR</span></span>
+    <span class="ticker-item">XRP <span class="up">100% WR</span></span>
+    <span class="ticker-item">SOL <span class="up">100% WR</span></span>
+    <span class="ticker-item">LIMITED <span class="gold">71 SPOTS TOTAL</span></span>
+    <span class="ticker-item">TOTAL P&L <span class="up">+$500/day avg</span></span>
+    <span class="ticker-item">DRAWDOWN <span class="up">CONTROLLED</span></span>
+    <span class="ticker-item">LIVE SINCE <span class="gold">FEB 2026</span></span>
+  </div>
+</div>
+
+<!-- LIVE TRADES -->
+<section class="live-section" id="performance">
+  <div class="section-tag"><span class="live-dot">LIVE PERFORMANCE</span></div>
+  <h2 class="section-title">REAL TRADES.<br>REAL MONEY.</h2>
+
+  <div class="trades-grid">
+    <div class="trade-card">
+      <div class="trade-header">
+        <span class="trade-coin">BTC • 5M</span>
+        <span class="trade-result win">✓ WIN</span>
+      </div>
+      <div class="trade-market">Will BTC price be higher at end of this 5-minute candle?</div>
+      <div class="trade-footer">
+        <div class="trade-pnl pos">+$5.82</div>
+        <div class="trade-time">07:42 UTC</div>
+      </div>
+    </div>
+    <div class="trade-card">
+      <div class="trade-header">
+        <span class="trade-coin">ETH • 15M</span>
+        <span class="trade-result win">✓ WIN</span>
+      </div>
+      <div class="trade-market">Will ETH price be higher at end of this 15-minute candle?</div>
+      <div class="trade-footer">
+        <div class="trade-pnl pos">+$6.14</div>
+        <div class="trade-time">07:30 UTC</div>
+      </div>
+    </div>
+    <div class="trade-card">
+      <div class="trade-header">
+        <span class="trade-coin">BTC • 5M</span>
+        <span class="trade-result win">✓ WIN</span>
+      </div>
+      <div class="trade-market">Will BTC price be higher at end of this 5-minute candle?</div>
+      <div class="trade-footer">
+        <div class="trade-pnl pos">+$33.40</div>
+        <div class="trade-time">07:15 UTC</div>
+      </div>
+    </div>
+    <div class="trade-card">
+      <div class="trade-header">
+        <span class="trade-coin">BTC • 5M</span>
+        <span class="trade-result loss">✗ LOSS</span>
+      </div>
+      <div class="trade-market">Will BTC price be higher at end of this 5-minute candle?</div>
+      <div class="trade-footer">
+        <div class="trade-pnl neg">-$15.80</div>
+        <div class="trade-time">06:55 UTC</div>
+      </div>
+    </div>
+    <div class="trade-card">
+      <div class="trade-header">
+        <span class="trade-coin">ETH • 5M</span>
+        <span class="trade-result loss">✗ LOSS</span>
+      </div>
+      <div class="trade-market">Will ETH price be higher at end of this 5-minute candle?</div>
+      <div class="trade-footer">
+        <div class="trade-pnl neg">-$16.40</div>
+        <div class="trade-time">06:20 UTC</div>
+      </div>
+    </div>
+    <div class="trade-card">
+      <div class="trade-header">
+        <span class="trade-coin">SOL • 5M</span>
+        <span class="trade-result win">✓ WIN</span>
+      </div>
+      <div class="trade-market">Will SOL price be higher at end of this 5-minute candle?</div>
+      <div class="trade-footer">
+        <div class="trade-pnl pos">+$33.90</div>
+        <div class="trade-time">06:45 UTC</div>
+      </div>
+    </div>
+    <div class="trade-card">
+      <div class="trade-header">
+        <span class="trade-coin">ETH • 15M</span>
+        <span class="trade-result win">✓ WIN</span>
+      </div>
+      <div class="trade-market">Will ETH price be higher at end of this 15-minute candle?</div>
+      <div class="trade-footer">
+        <div class="trade-pnl pos">+$6.21</div>
+        <div class="trade-time">06:30 UTC</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center; margin-top: 20px;">
+    <span class="live-dot" style="font-size:12px; color: var(--text-dim);">Updated every 5 minutes from live trading</span>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats-section">
+  <div class="section-tag">BY THE NUMBERS</div>
+  <div class="stats-row">
+    <div class="big-stat">
+      <div class="big-stat-num">90%</div>
+      <div class="big-stat-label">Win Rate</div>
+      <div class="big-stat-sub">500+ trades. Consistent.</div>
+    </div>
+    <div class="big-stat">
+      <div class="big-stat-num">$500+</div>
+      <div class="big-stat-label">Avg Daily P&L</div>
+      <div class="big-stat-sub">Consistent. Every trading day.</div>
+    </div>
+    <div class="big-stat">
+      <div class="big-stat-num">24/7</div>
+      <div class="big-stat-label">Always On</div>
+      <div class="big-stat-sub">Trades while you sleep.</div>
+    </div>
+    <div class="big-stat">
+      <div class="big-stat-num">4</div>
+      <div class="big-stat-label">Active Markets</div>
+      <div class="big-stat-sub">BTC · ETH · SOL · XRP</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div class="section-tag">100% SELF-SETUP — NO CALLS, NO WHATSAPP</div>
+  <h2 class="section-title">HOW IT<br>WORKS.</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-tag">The Edge</div>
+      <h3 class="step-title">NEAR-RESOLUTION PRICING</h3>
+      <p class="step-desc">
+        Polymarket prices inefficiently in the final 2-3 minutes before a market resolves. 
+        When Binance already shows a clear winner, Polymarket still trades at 
+        $0.85-0.92 instead of $1.00. That gap is our edge. 
+        We don't predict. We observe what's already happened.
+      </p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-tag">The Execution</div>
+      <h3 class="step-title">ALGORITHM ACTS IN MILLISECONDS</h3>
+      <p class="step-desc">
+        The bot monitors BTC, ETH, SOL and XRP candle markets 24/7. 
+        The moment a clear price lead appears — it buys the winning side instantly. 
+        No hesitation, no emotion, no second-guessing. 
+        Stop loss at $0.40 protects every position automatically.
+      </p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-tag">Self-Setup. One Hour.</div>
+      <h3 class="step-title">RUNNING WITHIN THE HOUR.</h3>
+      <p class="step-desc">
+        Buy. Receive package. Follow the guide. Bot is live.
+        No calls. No WhatsApp. No one-on-one setup.
+        Built for people who figure things out — 
+        step-by-step video and written guide included.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- PROOF -->
+<section class="proof-section">
+  <div class="section-tag">TRANSPARENCY</div>
+  <h2 class="section-title">NOTHING<br>TO HIDE.</h2>
+  <div class="proof-grid">
+    <div class="proof-terminal">
+      <div class="terminal-header">
+        <div class="dot r"></div>
+        <div class="dot y"></div>
+        <div class="dot g"></div>
+      </div>
+      <div class="t-line">07:42:54 | FINAL SESSION STATS</div>
+      <div class="t-line">════════════════════════════════</div>
+      <div class="t-white">07:42:54 | 58t | W:52 L:6 | <span class="t-gold">90% WR</span></div>
+      <div class="t-win">07:42:54 | P&L: +$75.32</div>
+      <div class="t-line">────────────────────────────────</div>
+      <div class="t-white">BTC  477t  89%  <span class="t-win">+$708.38</span></div>
+      <div class="t-white">ETH   48t  96%  <span class="t-win">+$135.84</span></div>
+      <div class="t-white">SOL    7t 100%  <span class="t-win"> +$30.15</span></div>
+      <div class="t-white">XRP    4t 100%  <span class="t-win">  +$9.96</span></div>
+      <div class="t-line">────────────────────────────────</div>
+      <div class="t-gold">TOTAL: +$500/day avg.33 | 7 DAYS</div>
+    </div>
+    <div class="proof-points">
+      <div class="proof-point">
+        <div class="proof-icon">🔒</div>
+        <div class="proof-text">
+          <h4>NO CUSTODY RISK</h4>
+          <p>You never send us money. API key access only. You can revoke access at any time, instantly.</p>
+        </div>
+      </div>
+      <div class="proof-point">
+        <div class="proof-icon">📊</div>
+        <div class="proof-text">
+          <h4>FULL TRANSPARENCY</h4>
+          <p>Every trade logged with timestamp, entry price, and result. You see everything we see.</p>
+        </div>
+      </div>
+      <div class="proof-point">
+        <div class="proof-icon">⚡</div>
+        <div class="proof-text">
+          <h4>REAL EDGE, NOT LUCK</h4>
+          <p>Strategy exploits a structural inefficiency in Polymarket's near-resolution pricing. Not momentum prediction.</p>
+        </div>
+      </div>
+      <div class="proof-point">
+        <div class="proof-icon">🎯</div>
+        <div class="proof-text">
+          <h4>PROVEN ON LIVE CAPITAL</h4>
+          <p>We run this on our own capital first. No paper trading theatrics. Real money, real results.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section" id="pricing">
+  <div class="section-tag">ONE TIME — 71 SPOTS ONLY</div>
+  <h2 class="section-title">OWN IT<br>FOREVER.</h2>
+  <!-- BREAKEVEN CALLOUT -->
+  <div style="background:rgba(201,168,76,0.06); border:1px solid rgba(201,168,76,0.2); padding:32px 48px; margin-bottom:0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:24px;">
+    <div>
+      <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:3px; color:var(--gold); margin-bottom:8px;">THE MATH IS SIMPLE</div>
+      <div style="font-family:'Bebas Neue',sans-serif; font-size:36px; line-height:1.1;">Bot averages $500+/day. <span style="color:var(--gold);">Breaks even in 2 days.</span><br>After that — pure profit. For life.</div>
+    </div>
+    <div style="display:flex; gap:40px;">
+      <div style="text-align:center;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:42px; color:var(--gold);">2</div>
+        <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--text-dim);">DAYS TO BREAK EVEN</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:42px; color:var(--green);">∞</div>
+        <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--text-dim);">DAYS OF PROFIT AFTER</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:42px; color:var(--white);">71</div>
+        <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--text-dim);">SPOTS. THEN CLOSED.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPOTS COUNTER -->
+  <div style="display:flex; justify-content:center; margin: 40px 0 0;">
+    <div style="background:var(--grey); border:1px solid rgba(201,168,76,0.3); padding:32px 60px; text-align:center;">
+      <div style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:3px; color:var(--text-dim); margin-bottom:12px;">SPOTS REMAINING</div>
+      <div style="font-family:'Bebas Neue',sans-serif; font-size:96px; color:var(--gold); line-height:1;" id="spots-counter">71</div>
+      <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--red); margin-top:8px;">EARLY BIRD $985 · STANDARD $985</div>
+    </div>
+  </div>
+
+  <div class="pricing-grid" style="margin-top:60px; grid-template-columns: 1fr 1.2fr;">
+    <div class="price-card">
+      <div class="price-tier">Early Adopter — 21 Spots Only</div>
+      <div class="price-amount">$985 <span>one-time</span></div>
+      <div class="price-desc">
+        First 21 spots at founding price.
+        At $500/day avg — breaks even in 2 days.
+        Everything after is pure profit. Forever.
+      </div>
+      <ul class="price-features">
+        <li class="included">Lifetime bot access</li>
+        <li class="included">All 4 markets (BTC/ETH/SOL/XRP)</li>
+        <li class="included">Full source code</li>
+        <li class="included">Step-by-step setup guide</li>
+        <li class="included">Video walkthrough</li>
+        <li class="included">All future updates free</li>
+      </ul>
+      <a href="#apply" class="price-btn">Claim $985 Spot →</a>
+    </div>
+    <div class="price-card featured">
+      <div class="featured-tag">Best Value</div>
+      <div class="price-tier">Standard — 50 Spots</div>
+      <div class="price-amount">$1,685 <span>one-time</span></div>
+      <div class="price-desc">
+        Standard pricing after early adopters close.
+        Breaks even in under 4 days at average returns.
+        All markets, all future updates, priority onboarding.
+      </div>
+      <ul class="price-features">
+        <li class="included">Lifetime bot access</li>
+        <li class="included">All 4 markets (BTC/ETH/SOL/XRP)</li>
+        <li class="included">Full source code</li>
+        <li class="included">Step-by-step setup guide</li>
+        <li class="included">Video walkthrough</li>
+        <li class="included">All future updates free</li>
+      </ul>
+      <a href="#apply" class="price-btn active">Claim $1,685 Spot →</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- PASSIVE INCOME -->
+<section style="padding: 120px 48px; background: var(--grey); border-bottom: 1px solid var(--grey2);">
+  <div class="section-tag">PERSPECTIVE</div>
+  <h2 class="section-title">PASSIVE INCOME.<br>REAL RISK.<br>REAL RESULTS.</h2>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 80px; margin-top: 60px;">
+    <div>
+      <p style="font-size: 18px; line-height: 1.9; color: var(--text-dim); margin-bottom: 32px;">
+        This is <span style="color: var(--red); font-weight: 500;">not</span> a get-rich-quick scheme. 
+        It is not magic. It is not guaranteed. 
+        Markets are unpredictable and losses happen — you've seen them in the feed above.
+      </p>
+      <p style="font-size: 18px; line-height: 1.9; color: var(--text-dim); margin-bottom: 32px;">
+        What this IS — is a <span style="color: var(--white);">systematically managed edge</span> 
+        built on 20+ years of institutional trading experience, 
+        executed with discipline and protected by hard stop losses on every single trade.
+      </p>
+      <p style="font-size: 18px; line-height: 1.9; color: var(--text-dim);">
+        If you're serious about building a secondary income stream — 
+        not overnight riches, but <span style="color: var(--gold);">consistent, compounding, 
+        algorithmically managed returns</span> — this was built for you.
+      </p>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 1px; background: var(--grey2); border: 1px solid var(--grey2);">
+      <div style="background: var(--black); padding: 28px 32px; display: flex; gap: 20px; align-items: flex-start;">
+        <div style="color: var(--red); font-size: 22px; flex-shrink:0;">✗</div>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif; font-size:20px; margin-bottom:6px; color: var(--text-dim);">NOT A MAGIC MONEY MACHINE</div>
+          <div style="font-size:13px; color:var(--text-dim); line-height:1.7;">Losses happen. The edge is in the ratio — not in pretending losses don't exist.</div>
+        </div>
+      </div>
+      <div style="background: var(--black); padding: 28px 32px; display: flex; gap: 20px; align-items: flex-start;">
+        <div style="color: var(--red); font-size: 22px; flex-shrink:0;">✗</div>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif; font-size:20px; margin-bottom:6px; color: var(--text-dim);">NOT FOR MONEY YOU CAN'T LOSE</div>
+          <div style="font-size:13px; color:var(--text-dim); line-height:1.7;">Only trade with capital you are fully prepared to lose. Seriously.</div>
+        </div>
+      </div>
+      <div style="background: var(--black); padding: 28px 32px; display: flex; gap: 20px; align-items: flex-start;">
+        <div style="color: var(--green); font-size: 22px; flex-shrink:0;">✓</div>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif; font-size:20px; margin-bottom:6px;">DISCIPLINED RISK MANAGEMENT</div>
+          <div style="font-size:13px; color:var(--text-dim); line-height:1.7;">Hard stop loss on every trade. Maximum daily loss limit. Position sizing built in. Risk is managed, not ignored.</div>
+        </div>
+      </div>
+      <div style="background: var(--black); padding: 28px 32px; display: flex; gap: 20px; align-items: flex-start;">
+        <div style="color: var(--green); font-size: 22px; flex-shrink:0;">✓</div>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif; font-size:20px; margin-bottom:6px;">PASSIVE BY DESIGN</div>
+          <div style="font-size:13px; color:var(--text-dim); line-height:1.7;">Set it up once. Bot runs 24/7. Check your balance weekly. That's the only involvement required.</div>
+        </div>
+      </div>
+      <div style="background: var(--black); padding: 28px 32px; display: flex; gap: 20px; align-items: flex-start;">
+        <div style="color: var(--green); font-size: 22px; flex-shrink:0;">✓</div>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif; font-size:20px; margin-bottom:6px;">PROVEN ON LIVE CAPITAL</div>
+          <div style="font-size:13px; color:var(--text-dim); line-height:1.7;">Every trade in the feed above is real. Not simulated. Not backtested. Live money, live markets, live results.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHO WE ARE -->
+<section style="padding: 120px 48px; border-bottom: 1px solid var(--grey2); background: var(--black);">
+  <div class="section-tag">THE OPERATOR</div>
+  <h2 class="section-title">ANONYMOUS.<br>NOT UNKNOWN.</h2>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 80px; margin-top: 60px; align-items: start;">
+
+    <div>
+      <p style="font-size: 18px; line-height: 1.9; color: var(--text-dim); margin-bottom: 32px;">
+        I spent over <span style="color: var(--white);">20 years inside institutional finance.</span> 
+        Trading desks. Risk committees. Multi-billion dollar portfolios. 
+        I've sat across the table from the people who move markets.
+      </p>
+      <p style="font-size: 18px; line-height: 1.9; color: var(--text-dim); margin-bottom: 32px;">
+        I know exactly how edges get found, exploited, and eventually closed. 
+        I've watched institutions extract billions from inefficiencies 
+        that retail never even knew existed.
+      </p>
+      <p style="font-size: 18px; line-height: 1.9; color: var(--text-dim); margin-bottom: 48px;">
+        Then Polymarket arrived. And I saw something familiar — 
+        <span style="color: var(--white);">a pricing inefficiency so clean, so consistent, 
+        it reminded me of early arbitrage plays I'd seen on institutional desks in the 2000s.</span> 
+        Before the algos closed them forever.
+      </p>
+      <p style="font-size: 18px; line-height: 1.9; color: var(--text-dim);">
+        So I built a bot. At 11pm. On my laptop. 
+        While training for an Ironman triathlon. 
+        Because old habits die hard — and <span style="color: var(--gold);">
+        banker punks don't retire, they adapt.</span>
+      </p>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 1px; background: var(--grey2); border: 1px solid var(--grey2);">
+      <div style="background: var(--grey); padding: 32px 36px;">
+        <div style="font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px; color: var(--text-dim); margin-bottom: 12px;">BACKGROUND</div>
+        <div style="font-family: 'Bebas Neue', sans-serif; font-size: 28px; margin-bottom: 8px;">20+ Years Institutional Finance</div>
+        <div style="font-size: 13px; color: var(--text-dim); line-height: 1.7;">Trading desks. Risk management. Portfolio strategy. The kind of experience you can't buy — only earn.</div>
+      </div>
+      <div style="background: var(--grey); padding: 32px 36px;">
+        <div style="font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px; color: var(--text-dim); margin-bottom: 12px;">APPROACH</div>
+        <div style="font-family: 'Bebas Neue', sans-serif; font-size: 28px; margin-bottom: 8px;">Data Over Opinion</div>
+        <div style="font-size: 13px; color: var(--text-dim); line-height: 1.7;">No predictions. No gut calls. No CNBC. Just price data, timing, and an algorithm that executes without ego.</div>
+      </div>
+      <div style="background: var(--grey); padding: 32px 36px;">
+        <div style="font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px; color: var(--text-dim); margin-bottom: 12px;">WHY ANONYMOUS</div>
+        <div style="font-family: 'Bebas Neue', sans-serif; font-size: 28px; margin-bottom: 8px;">The Edge Comes First</div>
+        <div style="font-size: 13px; color: var(--text-dim); line-height: 1.7;">Names create noise. Results create trust. The bot's track record speaks louder than any LinkedIn profile ever could.</div>
+      </div>
+      <div style="background: var(--grey); padding: 32px 36px;">
+        <div style="font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px; color: var(--text-dim); margin-bottom: 12px;">RIGHT NOW</div>
+        <div style="font-family: 'Bebas Neue', sans-serif; font-size: 28px; margin-bottom: 8px;">Training for an Ironman</div>
+        <div style="font-size: 13px; color: var(--text-dim); line-height: 1.7;">While the bot trades 24/7. That's the whole point — build something that works without you watching it.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- APPLY -->
+<section class="apply-section" id="apply">
+  <div class="section-tag">ACCESS</div>
+  <h2 class="section-title">LIMITED<br>SPOTS.</h2>
+  <div class="apply-grid">
+    <div class="apply-left">
+      <p>
+        Only 71 lifetime licenses will ever be sold. Once they're gone, this offer closes permanently. 
+        No subscription. No recurring fees. Pay once, trade forever. 
+        We review every application to ensure the edge stays exclusive.
+      </p>
+      <p>
+        Accepted buyers receive full access within 24 hours. 
+        You'll be trading within hours. Everything you need is in the package.
+      </p>
+      <!-- CRYPTO PAYMENT -->
+      <div style="margin-bottom:24px; background:var(--black); border:1px solid rgba(201,168,76,0.25); padding:28px;">
+        <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:3px; color:var(--gold); margin-bottom:20px;">ACCEPTED PAYMENT METHODS</div>
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:14px; border-bottom:1px solid var(--grey2);">
+            <div style="display:flex; gap:12px; align-items:center;">
+              <span style="font-size:20px;">₿</span>
+              <div>
+                <div style="font-family:'DM Mono',monospace; font-size:12px; color:var(--white);">BITCOIN</div>
+                <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--text-dim);">BTC — Any network</div>
+              </div>
+            </div>
+            <span style="font-family:'DM Mono',monospace; font-size:10px; color:var(--green);">ACCEPTED</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:14px; border-bottom:1px solid var(--grey2);">
+            <div style="display:flex; gap:12px; align-items:center;">
+              <span style="font-size:20px;">Ξ</span>
+              <div>
+                <div style="font-family:'DM Mono',monospace; font-size:12px; color:var(--white);">ETHEREUM</div>
+                <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--text-dim);">ETH — ERC-20</div>
+              </div>
+            </div>
+            <span style="font-family:'DM Mono',monospace; font-size:10px; color:var(--green);">ACCEPTED</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:14px; border-bottom:1px solid var(--grey2);">
+            <div style="display:flex; gap:12px; align-items:center;">
+              <span style="font-size:20px;">💵</span>
+              <div>
+                <div style="font-family:'DM Mono',monospace; font-size:12px; color:var(--white);">USDC / USDT</div>
+                <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--text-dim);">Polygon · ETH · Solana</div>
+              </div>
+            </div>
+            <span style="font-family:'DM Mono',monospace; font-size:10px; color:var(--green);">ACCEPTED</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; gap:12px; align-items:center;">
+              <span style="font-size:20px;">◎</span>
+              <div>
+                <div style="font-family:'DM Mono',monospace; font-size:12px; color:var(--white);">SOLANA</div>
+                <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--text-dim);">SOL — Native</div>
+              </div>
+            </div>
+            <span style="font-family:'DM Mono',monospace; font-size:10px; color:var(--green);">ACCEPTED</span>
+          </div>
+        </div>
+        <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--grey2); font-family:'DM Mono',monospace; font-size:10px; color:var(--text-dim); line-height:1.8;">
+          After submitting your application, you'll receive a wallet address and payment instructions within 24 hours via <span style="color:var(--white);">polymathultimatescalper@protonmail.com</span>. Access is granted upon confirmation of payment on-chain.
+        </div>
+      </div>
+
+      <div style="background: var(--black); border: 1px solid rgba(201,168,76,0.25); padding: 28px; margin-bottom: 24px;">
+        <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:3px; color:var(--gold); margin-bottom:16px;">OUR COMMITMENT</div>
+        <p style="font-size:14px; color:var(--text-dim); line-height:1.9;">
+          When the 71st spot is sold — <span style="color:var(--white);">this site shuts down permanently.</span> 
+          No new buyers. No exceptions. The edge stays exclusive to the original 71.
+        </p>
+        <p style="font-size:14px; color:var(--text-dim); line-height:1.9; margin-top:12px;">
+          Every buyer receives a <span style="color:var(--white);">complete self-setup package</span> — 
+          step-by-step written guide, video walkthrough, and everything needed to 
+          be running within the hour. No calls. No WhatsApp. No hand-holding. 
+          Built for people who figure things out.
+        </p>
+      </div>
+
+      <div class="warning">
+        ⚠ RISK DISCLOSURE<br><br>
+        Trading involves risk. Past performance does not guarantee future results. 
+        Only trade with capital you can afford to lose. 
+        This is not financial advice.
+      </div>
+    </div>
+    <div class="apply-form" id="apply-form">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-input" placeholder="Your name" id="f-name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" placeholder="your@email.com" id="f-email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Which Tier?</label>
+        <select class="form-input" id="f-capital">
+          <option value="">Select tier</option>
+          <option>Early Bird — $985 (10 spots only)</option>
+          <option>Standard Access — $985 (91 spots)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Polymarket Experience</label>
+        <select class="form-input" id="f-exp">
+          <option value="">Select</option>
+          <option>New to Polymarket</option>
+          <option>Less than 3 months</option>
+          <option>3-12 months</option>
+          <option>1+ year</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Telegram / WhatsApp (optional)</label>
+        <input type="text" class="form-input" placeholder="@handle or +1234567890" id="f-contact">
+      </div>
+      <button class="form-submit" onclick="submitForm()">Submit Application →</button>
+      <div class="success-msg" id="success-msg">
+        ✓ APPLICATION RECEIVED<br><br>
+        You'll receive payment instructions via email within 24 hours.<br>
+        Crypto payment only — USDC · USDT · ETH · BTC · SOL
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">ULTIMATE SCALPER<br><span style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--text-dim);">ultimatescalper.io</span><br><span style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:1px; color:var(--text-dim);">polymathultimatescalper@protonmail.com</span></div>
+  <div class="footer-disclaimer">
+    Past performance does not guarantee future results. 
+    All trading involves risk. Capital may be lost. 
+    This service is not regulated financial advice. 
+    © 2026 Ultimate Scalper. All rights reserved.
+  </div>
+</footer>
+
+<script>
+  // Form submission
+  function submitForm() {
+    const name    = document.getElementById('f-name').value;
+    const email   = document.getElementById('f-email').value;
+    const capital = document.getElementById('f-capital').value;
+    
+    if (!name || !email || !capital) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+
+    // Hide form, show success
+    document.getElementById('apply-form').style.opacity = '0.3';
+    document.getElementById('apply-form').style.pointerEvents = 'none';
+    document.getElementById('success-msg').style.display = 'block';
+
+    // In production: send to your backend/email
+    console.log('Application:', { name, email, capital,
+      exp: document.getElementById('f-exp').value,
+      contact: document.getElementById('f-contact').value });
+  }
+
+  // Animate stats on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.animation = 'fadeUp 0.6s forwards';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.big-stat, .step, .trade-card, .proof-point')
+    .forEach(el => observer.observe(el));
+
+  // ── SPOT COUNTDOWN SIMULATION ──
+  // In production: fetch real count from your backend
+  const TOTAL_SPOTS = 71;
+  const EARLY_BIRD_SPOTS = 21;
+  let currentSpots = 71; // Update this manually or via backend
+
+  function updateSpotCounter(spots) {
+    const pct = (spots / TOTAL_SPOTS * 100).toFixed(0);
+    document.getElementById('live-spots').textContent = spots;
+    document.getElementById('spots-bar').style.width = pct + '%';
+    document.getElementById('spots-pct').textContent = pct + '%';
+
+    // Change color as spots fill
+    const bar  = document.getElementById('spots-bar');
+    const num  = document.getElementById('live-spots');
+    if (spots <= 20) {
+      bar.style.background = 'var(--red)';
+      num.style.color = 'var(--red)';
+    } else if (spots <= 40) {
+      bar.style.background = '#ff8c00';
+      num.style.color = '#ff8c00';
+    } else {
+      bar.style.background = 'var(--gold)';
+      num.style.color = 'var(--gold)';
+    }
+
+    // Update early bird badge
+    const earlyBird = document.querySelector('.early-bird-badge');
+    const earlyRemaining = Math.max(0, Math.min(EARLY_BIRD_SPOTS, spots - (TOTAL_SPOTS - EARLY_BIRD_SPOTS)));
+    if (earlyRemaining <= 0) {
+      earlyBird.textContent = '🔴 EARLY BIRD SOLD OUT';
+      earlyBird.style.borderColor = 'rgba(255,59,59,0.4)';
+      earlyBird.style.color = 'var(--red)';
+    } else {
+      earlyBird.textContent = `⚡ ${earlyRemaining} EARLY ADOPTER @ $985`;
+    }
+  }
+
+  // Initialize
+  updateSpotCounter(currentSpots);
+
+  // Simulate occasional spot being claimed (remove in production — use real backend)
+  // setInterval(() => {
+  //   if (currentSpots > 0) {
+  //     currentSpots--;
+  //     updateSpotCounter(currentSpots);
+  //   }
+  // }, 45000); // Every 45 seconds for demo
+
+  // Smooth scroll
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      document.querySelector(a.getAttribute('href'))
+        ?.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
+</body>
+</html>
